@@ -5,6 +5,8 @@ axon:
         processors:
             logging:
                 mode: subscribing
+            reader-db:
+                mode: subscribing
     serializer:
         events: jackson
 
