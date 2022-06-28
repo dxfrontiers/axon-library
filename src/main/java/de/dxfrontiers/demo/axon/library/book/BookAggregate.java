@@ -1,9 +1,11 @@
 package de.dxfrontiers.demo.axon.library.book;
 
 import de.dxfrontiers.demo.axon.library.book.command.AddBookCommand;
+import de.dxfrontiers.demo.axon.library.book.command.EndRentalCommand;
 import de.dxfrontiers.demo.axon.library.book.command.ExtendRentalCommand;
 import de.dxfrontiers.demo.axon.library.book.command.StartRentalCommand;
 import de.dxfrontiers.demo.axon.library.book.event.BookAddedEvent;
+import de.dxfrontiers.demo.axon.library.book.event.RentalEndedEvent;
 import de.dxfrontiers.demo.axon.library.book.event.RentalExtendedEvent;
 import de.dxfrontiers.demo.axon.library.book.event.RentalStartedEvent;
 import de.dxfrontiers.demo.axon.library.exception.DuplicateIdException;
@@ -169,6 +171,25 @@ public class BookAggregate {
     public void on(RentalExtendedEvent event) {
         Rental activeRental = rentals.get(rentals.size() - 1);
         activeRental.setExpectedReturnDate(activeRental.getExpectedReturnDate().plus(event.getExtendDuration()));
+    }
+
+    @CommandHandler
+    public void handle(EndRentalCommand command) {
+        requireActiveRental();
+
+        AggregateLifecycle.apply(
+            RentalEndedEvent.builder()
+                .bookId(command.getBookId())
+                .build()
+        );
+    }
+
+    @EventSourcingHandler
+    public void on(
+        RentalEndedEvent event,
+        @Timestamp Instant instant
+    ) {
+        rentals.get(rentals.size() - 1).setReturnedAt(instant);
     }
 
     public enum Type {
