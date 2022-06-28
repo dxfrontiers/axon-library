@@ -29,6 +29,9 @@ public class BookEntity {
     @Column(name = "TITLE")
     private String title;
 
+    @Column(name = "RENTED")
+    private boolean rented;
+
     public BookEntity setBookId(UUID bookId) {
         this.bookId = bookId.toString();
         return this;
