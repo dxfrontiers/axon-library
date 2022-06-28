@@ -1,0 +1,18 @@
+axon:
+    axonserver:
+        enabled: false
+    eventhandling:
+        processors:
+            logging:
+                mode: subscribing
+    serializer:
+        events: jackson
+
+spring:
+    h2:
+        console:
+            enabled: true
+    datasource:
+        url: jdbc:h2:mem:axon-library
+        user: sa
+        password: sa
