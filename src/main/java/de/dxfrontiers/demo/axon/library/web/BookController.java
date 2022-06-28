@@ -2,6 +2,7 @@ package de.dxfrontiers.demo.axon.library.web;
 
 import de.dxfrontiers.demo.axon.library.book.BookAggregate;
 import de.dxfrontiers.demo.axon.library.book.command.AddBookCommand;
+import de.dxfrontiers.demo.axon.library.book.command.StartRentalCommand;
 import de.dxfrontiers.demo.axon.library.persistence.BookEntity;
 import de.dxfrontiers.demo.axon.library.persistence.BookRepository;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +11,7 @@ import org.axonframework.eventhandling.gateway.EventGateway;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/books")
@@ -38,6 +40,19 @@ public class BookController {
                 .author(author)
                 .title(title)
                 .type(type)
+                .build()
+        );
+    }
+
+    @PostMapping("/start-rental-command")
+    public void startRental(
+        @RequestParam UUID bookId,
+        @RequestParam UUID readerId
+    ) {
+        commandGateway.sendAndWait(
+            StartRentalCommand.builder()
+                .bookId(bookId)
+                .readerId(readerId)
                 .build()
         );
     }
