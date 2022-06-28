@@ -1,6 +1,7 @@
 package de.dxfrontiers.demo.axon.library.eventhandler;
 
 import de.dxfrontiers.demo.axon.library.book.event.BookAddedEvent;
+import de.dxfrontiers.demo.axon.library.book.event.RentalEndedEvent;
 import de.dxfrontiers.demo.axon.library.book.event.RentalStartedEvent;
 import de.dxfrontiers.demo.axon.library.config.axon.ProcessingGroups;
 import de.dxfrontiers.demo.axon.library.exception.EntityNotFoundException;
@@ -36,6 +37,17 @@ public class BookDatabaseProjector {
             .orElseThrow(EntityNotFoundException::new);
 
         book.setRented(true);
+
+        bookRepository.save(book);
+    }
+
+    @EventHandler
+    public void on(RentalEndedEvent event) {
+        BookEntity book = bookRepository
+            .findOneByBookId(event.getBookId().toString())
+            .orElseThrow(EntityNotFoundException::new);
+
+        book.setRented(false);
 
         bookRepository.save(book);
     }
