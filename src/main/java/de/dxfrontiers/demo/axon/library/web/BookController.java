@@ -2,6 +2,7 @@ package de.dxfrontiers.demo.axon.library.web;
 
 import de.dxfrontiers.demo.axon.library.book.BookAggregate;
 import de.dxfrontiers.demo.axon.library.book.command.AddBookCommand;
+import de.dxfrontiers.demo.axon.library.book.command.EndRentalCommand;
 import de.dxfrontiers.demo.axon.library.book.command.ExtendRentalCommand;
 import de.dxfrontiers.demo.axon.library.book.command.StartRentalCommand;
 import de.dxfrontiers.demo.axon.library.persistence.BookEntity;
@@ -65,6 +66,17 @@ public class BookController {
             ExtendRentalCommand.builder()
                 .bookId(bookId)
                 .readerId(readerId)
+                .build()
+        );
+    }
+
+    @PostMapping("/end-rental-command")
+    public void endRental(
+        @RequestParam UUID bookId
+    ) {
+        commandGateway.sendAndWait(
+            EndRentalCommand.builder()
+                .bookId(bookId)
                 .build()
         );
     }
