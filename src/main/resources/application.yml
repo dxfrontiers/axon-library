@@ -9,6 +9,8 @@ axon:
                 mode: subscribing
             book-db:
                 mode: subscribing
+            catalog-db:
+                mode: subscribing
     serializer:
         events: jackson
 
