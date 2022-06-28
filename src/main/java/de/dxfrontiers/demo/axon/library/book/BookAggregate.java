@@ -1,12 +1,15 @@
 package de.dxfrontiers.demo.axon.library.book;
 
 import de.dxfrontiers.demo.axon.library.book.command.AddBookCommand;
+import de.dxfrontiers.demo.axon.library.book.command.ExtendRentalCommand;
 import de.dxfrontiers.demo.axon.library.book.command.StartRentalCommand;
 import de.dxfrontiers.demo.axon.library.book.event.BookAddedEvent;
+import de.dxfrontiers.demo.axon.library.book.event.RentalExtendedEvent;
 import de.dxfrontiers.demo.axon.library.book.event.RentalStartedEvent;
 import de.dxfrontiers.demo.axon.library.exception.DuplicateIdException;
 import de.dxfrontiers.demo.axon.library.exception.EntityNotFoundException;
 import de.dxfrontiers.demo.axon.library.exception.OperationNotPossibleException;
+import de.dxfrontiers.demo.axon.library.exception.UnauthorizedAccessException;
 import de.dxfrontiers.demo.axon.library.persistence.ReaderRepository;
 import lombok.Data;
 import org.axonframework.commandhandling.CommandHandler;
@@ -130,6 +133,42 @@ public class BookAggregate {
                 .setStartedAt(instant)
                 .setExpectedReturnDate(instant.plus(event.getDuration()))
         );
+    }
+
+    @CommandHandler
+    public void handle(ExtendRentalCommand command) {
+        if (rentals.size() == 0 || !rentals.get(rentals.size() - 1).getReaderId().equals(command.getReaderId())) {
+            throw new UnauthorizedAccessException();
+        }
+        requireActiveRental();
+
+        Duration extendDuration;
+        if (type == Type.MAGAZINE) {
+            throw new OperationNotPossibleException();
+        } else if (type == Type.BOOK) {
+            extendDuration = Duration.of(14, ChronoUnit.DAYS);
+        } else {
+            extendDuration = Duration.of(7, ChronoUnit.DAYS);
+        }
+
+        AggregateLifecycle.apply(
+            RentalExtendedEvent.builder()
+                .bookId(command.getBookId())
+                .extendDuration(extendDuration)
+                .build()
+        );
+    }
+
+    private void requireActiveRental() {
+        if (rentals.size() == 0 || !rentals.get(rentals.size() - 1).isActive()) {
+            throw new OperationNotPossibleException();
+        }
+    }
+
+    @EventSourcingHandler
+    public void on(RentalExtendedEvent event) {
+        Rental activeRental = rentals.get(rentals.size() - 1);
+        activeRental.setExpectedReturnDate(activeRental.getExpectedReturnDate().plus(event.getExtendDuration()));
     }
 
     public enum Type {
