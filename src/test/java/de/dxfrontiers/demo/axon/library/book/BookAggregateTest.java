@@ -1,17 +1,21 @@
 package de.dxfrontiers.demo.axon.library.book;
 
 import de.dxfrontiers.demo.axon.library.book.command.AddBookCommand;
+import de.dxfrontiers.demo.axon.library.book.command.ExtendRentalCommand;
 import de.dxfrontiers.demo.axon.library.book.command.StartRentalCommand;
 import de.dxfrontiers.demo.axon.library.book.event.BookAddedEvent;
+import de.dxfrontiers.demo.axon.library.book.event.RentalExtendedEvent;
 import de.dxfrontiers.demo.axon.library.book.event.RentalStartedEvent;
 import de.dxfrontiers.demo.axon.library.exception.DuplicateIdException;
 import de.dxfrontiers.demo.axon.library.exception.EntityNotFoundException;
 import de.dxfrontiers.demo.axon.library.exception.OperationNotPossibleException;
+import de.dxfrontiers.demo.axon.library.exception.UnauthorizedAccessException;
 import de.dxfrontiers.demo.axon.library.persistence.ReaderEntity;
 import de.dxfrontiers.demo.axon.library.persistence.ReaderRepository;
 import org.assertj.core.api.AssertionsForClassTypes;
 import org.axonframework.test.aggregate.AggregateTestFixture;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -288,6 +292,174 @@ public class BookAggregateTest {
                 )
                 .expectNoEvents()
                 .expectException(OperationNotPossibleException.class);
+        }
+    }
+
+    @Nested
+    class ExtendRental {
+
+        @Test
+        public void extensionDurationForBooksIs2Weeks() {
+            UUID bookId = UUID.randomUUID();
+            UUID readerId = UUID.randomUUID();
+
+            fixture
+                .given(
+                    BookAddedEvent.builder()
+                        .bookId(bookId)
+                        .isbn("some-isbn")
+                        .author("Douglas Adams")
+                        .title("The Hitchhiker's Guide to the Galaxy")
+                        .type(BookAggregate.Type.BOOK)
+                        .build(),
+                    RentalStartedEvent.builder()
+                        .bookId(bookId)
+                        .readerId(readerId)
+                        .duration(Duration.of(28, ChronoUnit.DAYS))
+                        .build()
+                )
+                .when(
+                    ExtendRentalCommand.builder()
+                        .bookId(bookId)
+                        .readerId(readerId)
+                        .build()
+                )
+                .expectSuccessfulHandlerExecution()
+                .expectEvents(
+                    RentalExtendedEvent.builder()
+                        .bookId(bookId)
+                        .extendDuration(Duration.of(14, ChronoUnit.DAYS))
+                        .build()
+                );
+        }
+
+        @Test
+        public void extensionDurationForUnknownMediaIs1Week() {
+            UUID bookId = UUID.randomUUID();
+            UUID readerId = UUID.randomUUID();
+
+            fixture
+                .given(
+                    BookAddedEvent.builder()
+                        .bookId(bookId)
+                        .isbn("some-isbn")
+                        .author("Douglas Adams")
+                        .title("The Hitchhiker's Guide to the Galaxy")
+                        .type(BookAggregate.Type.UNKNOWN)
+                        .build(),
+                    RentalStartedEvent.builder()
+                        .bookId(bookId)
+                        .readerId(readerId)
+                        .duration(Duration.of(14, ChronoUnit.DAYS))
+                        .build()
+                )
+                .when(
+                    ExtendRentalCommand.builder()
+                        .bookId(bookId)
+                        .readerId(readerId)
+                        .build()
+                )
+                .expectSuccessfulHandlerExecution()
+                .expectEvents(
+                    RentalExtendedEvent.builder()
+                        .bookId(bookId)
+                        .extendDuration(Duration.of(7, ChronoUnit.DAYS))
+                        .build()
+                );
+        }
+
+        @Test
+        public void extensionForMagazinesNotPossible() {
+            UUID bookId = UUID.randomUUID();
+            UUID readerId = UUID.randomUUID();
+
+            fixture
+                .given(
+                    BookAddedEvent.builder()
+                        .bookId(bookId)
+                        .isbn("some-isbn")
+                        .author("Douglas Adams")
+                        .title("The Hitchhiker's Guide to the Galaxy")
+                        .type(BookAggregate.Type.MAGAZINE)
+                        .build(),
+                    RentalStartedEvent.builder()
+                        .bookId(bookId)
+                        .readerId(readerId)
+                        .duration(Duration.of(7, ChronoUnit.DAYS))
+                        .build()
+                )
+                .when(
+                    ExtendRentalCommand.builder()
+                        .bookId(bookId)
+                        .readerId(readerId)
+                        .build()
+                )
+                .expectNoEvents()
+                .expectException(OperationNotPossibleException.class);
+        }
+
+        @Test
+        @Disabled
+        public void extensionForNotRentedBookNotPossible() {
+            UUID bookId = UUID.randomUUID();
+            UUID readerId = UUID.randomUUID();
+
+            fixture
+                .given(
+                    BookAddedEvent.builder()
+                        .bookId(bookId)
+                        .isbn("some-isbn")
+                        .author("Douglas Adams")
+                        .title("The Hitchhiker's Guide to the Galaxy")
+                        .type(BookAggregate.Type.MAGAZINE)
+                        .build(),
+                    RentalStartedEvent.builder()
+                        .bookId(bookId)
+                        .readerId(readerId)
+                        .duration(Duration.of(7, ChronoUnit.DAYS))
+                        .build()
+//                    RentalEndedEvent.builder()
+//                        .bookId(bookId)
+//                        .build()
+                )
+                .when(
+                    ExtendRentalCommand.builder()
+                        .bookId(bookId)
+                        .readerId(readerId)
+                        .build()
+                )
+                .expectNoEvents()
+                .expectException(OperationNotPossibleException.class);
+        }
+
+        @Test
+        public void extensionNotPossibleForOtherUserThanLendingUser() {
+            UUID bookId = UUID.randomUUID();
+            UUID readerId = UUID.randomUUID();
+
+            fixture
+                .given(
+                    BookAddedEvent.builder()
+                        .bookId(bookId)
+                        .isbn("some-isbn")
+                        .author("Douglas Adams")
+                        .title("The Hitchhiker's Guide to the Galaxy")
+                        .type(BookAggregate.Type.MAGAZINE)
+                        .build(),
+                    RentalStartedEvent.builder()
+                        .bookId(bookId)
+                        .readerId(readerId)
+                        .duration(Duration.of(7, ChronoUnit.DAYS))
+                        .build()
+                )
+                .when(
+                    ExtendRentalCommand.builder()
+                        .bookId(bookId)
+                        .readerId(UUID.randomUUID())
+                        .build()
+                )
+                .expectNoEvents()
+                .expectException(UnauthorizedAccessException.class);
         }
     }
 }
