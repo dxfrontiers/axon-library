@@ -3,7 +3,7 @@ package de.dxfrontiers.demo.axon.library.persistence;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @Entity
 @Table(name = "CATALOG")

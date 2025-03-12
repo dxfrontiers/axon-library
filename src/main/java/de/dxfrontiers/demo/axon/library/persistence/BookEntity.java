@@ -1,9 +1,9 @@
 package de.dxfrontiers.demo.axon.library.persistence;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.*;
 import lombok.Data;
 
-import javax.persistence.*;
 import java.util.UUID;
 
 @Entity
