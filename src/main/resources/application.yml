@@ -8,7 +8,7 @@ axon:
             reader-db:
                 mode: subscribing
             book-db:
-                mode: subscribing
+                mode: tracking
             catalog-db:
                 mode: subscribing
     serializer:
