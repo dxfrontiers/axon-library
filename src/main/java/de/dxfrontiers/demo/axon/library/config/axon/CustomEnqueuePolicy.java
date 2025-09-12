@@ -18,10 +18,14 @@ public class CustomEnqueuePolicy implements EnqueuePolicy<EventMessage<?>> {
         if (cause instanceof NullPointerException) {
             return Decisions.doNotEnqueue();
         }
+
+        var retries = (int) letter.diagnostics().getOrDefault("retries", 0);
+        log.info("DeadLetter has been tried " + retries + " times");
         if (letter.message().getPayload() instanceof BookAddedEvent &&
             letter.enqueuedAt().isAfter(Instant.now().plus(Duration.ofMinutes(5L)))) {
             return Decisions.evict();
         }
-        return Decisions.enqueue(cause);
+
+        return Decisions.requeue(cause, l -> l.diagnostics().and("retries", retries + 1));
     }
 }

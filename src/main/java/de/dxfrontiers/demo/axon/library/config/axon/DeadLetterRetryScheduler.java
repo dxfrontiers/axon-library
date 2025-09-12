@@ -36,7 +36,7 @@ public class DeadLetterRetryScheduler {
             config.deadLetterQueue("book-db")
                 .map(SequencedDeadLetterQueue::deadLetters)
                 .orElseThrow(() -> new IllegalArgumentException("No such Processing Group"));
-        log.info("iterating on sequendes...");
+        log.info("iterating on sequences...");
         // Iterate over all sequences:
         for (Iterable<DeadLetter<? extends EventMessage<?>>> sequence : deadLetterSequences) {
             Iterator<DeadLetter<? extends EventMessage<?>>> sequenceIterator = sequence.iterator();
