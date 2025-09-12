@@ -7,6 +7,7 @@ import de.dxfrontiers.demo.axon.library.config.axon.ProcessingGroups;
 import de.dxfrontiers.demo.axon.library.exception.EntityNotFoundException;
 import de.dxfrontiers.demo.axon.library.persistence.BookEntity;
 import de.dxfrontiers.demo.axon.library.persistence.BookRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.axonframework.config.ProcessingGroup;
 import org.axonframework.eventhandling.EventHandler;
@@ -20,10 +21,8 @@ public class BookDatabaseProjector {
     private final BookRepository bookRepository;
 
     @EventHandler
+    @Transactional(Transactional.TxType.REQUIRES_NEW)
     public void on(BookAddedEvent event) {
-        if (event != null) {
-            throw new IllegalArgumentException("first lets try something other than a persistence exception,");
-        }
         bookRepository.save(
             new BookEntity()
                 .setBookId(event.getBookId())
