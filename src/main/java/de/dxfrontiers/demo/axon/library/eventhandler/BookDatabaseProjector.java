@@ -21,6 +21,9 @@ public class BookDatabaseProjector {
 
     @EventHandler
     public void on(BookAddedEvent event) {
+        if (event != null) {
+            throw new IllegalArgumentException("first lets try something other than a persistence exception,");
+        }
         bookRepository.save(
             new BookEntity()
                 .setBookId(event.getBookId())
