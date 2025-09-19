@@ -19,7 +19,12 @@ public class CustomEnqueuePolicy implements EnqueuePolicy<EventMessage<?>> {
             return Decisions.doNotEnqueue();
         }
 
-        var retries = (int) letter.diagnostics().getOrDefault("retries", 0);
+        var retries = (int) letter.diagnostics().getOrDefault("retries", -1);
+
+        if (retries < 0)
+        {
+            return Decisions.enqueue(cause, l -> l.diagnostics().and("retries", retries + 1));
+        }
         log.info("DeadLetter has been tried " + retries + " times");
         if (letter.message().getPayload() instanceof BookAddedEvent &&
             letter.enqueuedAt().isAfter(Instant.now().plus(Duration.ofMinutes(5L)))) {
